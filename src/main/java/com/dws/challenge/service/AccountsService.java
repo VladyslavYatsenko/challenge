@@ -23,7 +23,7 @@ public class AccountsService {
     }
 
     public Account getAccount(String accountId) {
-        return this.accountsRepository.getAccount(accountId)
+        return accountsRepository.getAccount(accountId)
                 .orElseThrow(
                         () -> new AccountNotFoundException("Account with id: " + accountId + " was not found"));
     }
