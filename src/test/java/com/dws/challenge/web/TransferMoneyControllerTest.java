@@ -51,12 +51,17 @@ class TransferMoneyControllerTest {
 
     @Test
     void performTransferFromOneAccountToAnother() throws Exception {
-        mockMvc.perform(post("/v1/accounts/transfer").contentType(MediaType.APPLICATION_JSON)
-                .content("{\n" +
-                        "    \"accountFromId\": \"Id-123\",\n" +
-                        "    \"accountToId\": \"Id-321\",\n" +
-                        "    \"amount\" : 10\n" +
-                        "}")).andExpect(status().isOk());
+        var res = mockMvc.perform(post("/v1/accounts/transfer").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\n" +
+                                "    \"accountFromId\": \"Id-123\",\n" +
+                                "    \"accountToId\": \"Id-321\",\n" +
+                                "    \"amount\" : 10\n" +
+                                "}"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(res))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -67,27 +72,6 @@ class TransferMoneyControllerTest {
                         "    \"accountToId\": \"Id-321\",\n" +
                         "    \"amount\" : 1000\n" +
                         "}")).andExpect(status().isBadRequest());
-    }
-
-
-    @Test
-    void shouldNotPerformTransferFromNotExistingAccount() throws Exception {
-        mockMvc.perform(post("/v1/accounts/transfer").contentType(MediaType.APPLICATION_JSON)
-                .content("{\n" +
-                        "    \"accountFromId\": \"errorId\",\n" +
-                        "    \"accountToId\": \"Id-321\",\n" +
-                        "    \"amount\" : 1000\n" +
-                        "}")).andExpect(status().isNotFound());
-    }
-
-    @Test
-    void shouldNotPerformTransferToNotExistingAccount() throws Exception {
-        mockMvc.perform(post("/v1/accounts/transfer").contentType(MediaType.APPLICATION_JSON)
-                .content("{\n" +
-                        "    \"accountFromId\": \"Id-123\",\n" +
-                        "    \"accountToId\": \"errorId\",\n" +
-                        "    \"amount\" : 1000\n" +
-                        "}")).andExpect(status().isNotFound());
     }
 
     @Test

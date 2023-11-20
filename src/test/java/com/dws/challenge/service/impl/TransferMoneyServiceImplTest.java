@@ -13,8 +13,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -51,7 +53,8 @@ class TransferMoneyServiceImplTest {
         Account accountTo = new Account("Id-321", BigDecimal.valueOf(200));
         BigDecimal amount = BigDecimal.valueOf(150);
 
-        assertThrows(TransferMoneyException.class, () -> transferMoneyService.transferMoney(accountFrom.getAccountId(), accountTo.getAccountId(), amount));
+        ExecutionException executionException = assertThrows(ExecutionException.class, () -> transferMoneyService.transferMoney(accountFrom.getAccountId(), accountTo.getAccountId(), amount).get());
+        assertEquals(executionException.getCause().getClass(), TransferMoneyException.class);
     }
 
 }

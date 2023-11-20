@@ -1,9 +1,10 @@
 package com.dws.challenge.service;
 
 import java.math.BigDecimal;
+import java.util.concurrent.CompletableFuture;
 
 public interface TransferMoneyService {
 
-  void transferMoney(String accountFromId, String accountToId, BigDecimal amount);
+  CompletableFuture<Void> transferMoney(String accountFromId, String accountToId, BigDecimal amount);
 
 }

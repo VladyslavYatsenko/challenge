@@ -5,11 +5,12 @@ import com.dws.challenge.exception.TransferMoneyException;
 import com.dws.challenge.service.AccountsService;
 import com.dws.challenge.service.NotificationService;
 import com.dws.challenge.service.TransferMoneyService;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -19,13 +20,14 @@ public class TransferMoneyServiceImpl implements TransferMoneyService {
 
     private final NotificationService notificationService;
 
+    @Async
     @Override
     //@Transactional(isolation = Isolation.SERIALIZABLE) TODO to use transactional need to add spring tx or spring-data-jpa-starter
-    public synchronized void transferMoney(String accountFromId, String accountToId, BigDecimal amount) {
+    public CompletableFuture<Void> transferMoney(String accountFromId, String accountToId, BigDecimal amount) {
         Account accountFrom = accountsService.getAccount(accountFromId);
         Account accountTo = accountsService.getAccount(accountToId);
 
-        if (accountFrom.getBalance().compareTo(amount) >= 0) { // checking the balance (if possible to transfer)
+        if (accountFrom.getBalance().compareTo(amount) >= 0) {
             accountFrom.setBalance(accountFrom.getBalance().subtract(amount));
             notificationService.notifyAboutTransfer(accountFrom, "Money transfer was performed to Account: " + accountTo.getAccountId() + ", Amount: "+  amount);
 
@@ -34,6 +36,6 @@ public class TransferMoneyServiceImpl implements TransferMoneyService {
         } else {
             throw new TransferMoneyException("Cannot perform transfer, please check your balance");
         }
-
+        return CompletableFuture.completedFuture(null);
     }
 }
