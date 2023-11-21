@@ -10,5 +10,7 @@ public interface AccountsRepository {
 
   Optional<Account> getAccount(String accountId);
 
+  void updateAccount(Account account);
+
   void clearAccounts();
 }

@@ -13,10 +13,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
-import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -33,8 +31,12 @@ class TransferMoneyServiceImplTest {
     @BeforeEach
     public void setUp() {
         //mocking creating of an accounts
-        when(accountsService.getAccount("Id-123")).thenReturn(new Account("Id-123, ", BigDecimal.valueOf(100)));
-        when(accountsService.getAccount("Id-321")).thenReturn(new Account("Id-321, ", BigDecimal.valueOf(200)));
+        Account accountTo = new Account("Id-123, ", BigDecimal.valueOf(100));
+        Account accountFrom = new Account("Id-123, ", BigDecimal.valueOf(200));
+        accountTo.setVersion(System.currentTimeMillis());
+        accountFrom.setVersion(System.currentTimeMillis());
+        when(accountsService.getAccount("Id-123")).thenReturn(accountTo);
+        when(accountsService.getAccount("Id-321")).thenReturn(accountFrom);
 
     }
 
@@ -42,6 +44,8 @@ class TransferMoneyServiceImplTest {
     void shouldPerformTransferMoneyFromOneAccountToAnother() {
         Account accountFrom = new Account("Id-123", BigDecimal.valueOf(100));
         Account accountTo = new Account("Id-321", BigDecimal.valueOf(200));
+        accountFrom.setVersion(System.currentTimeMillis());
+        accountTo.setVersion(System.currentTimeMillis());
         BigDecimal amount = BigDecimal.valueOf(50);
 
         assertDoesNotThrow(() -> transferMoneyService.transferMoney(accountFrom.getAccountId(), accountTo.getAccountId(), amount));
@@ -51,10 +55,10 @@ class TransferMoneyServiceImplTest {
     void shouldThrowTransferMoneyException() {
         Account accountFrom = new Account("Id-123", BigDecimal.valueOf(100));
         Account accountTo = new Account("Id-321", BigDecimal.valueOf(200));
+
         BigDecimal amount = BigDecimal.valueOf(150);
 
-        ExecutionException executionException = assertThrows(ExecutionException.class, () -> transferMoneyService.transferMoney(accountFrom.getAccountId(), accountTo.getAccountId(), amount).get());
-        assertEquals(executionException.getCause().getClass(), TransferMoneyException.class);
+        assertThrows(TransferMoneyException.class, () -> transferMoneyService.transferMoney(accountFrom.getAccountId(), accountTo.getAccountId(), amount));
     }
 
 }

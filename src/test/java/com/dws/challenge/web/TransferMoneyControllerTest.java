@@ -41,27 +41,46 @@ class TransferMoneyControllerTest {
         mockMvc = webAppContextSetup(webApplicationContext).build();
 
         //mocking creating of an accounts
-        when(accountsService.getAccount("Id-123")).thenReturn(new Account("Id-123, ", BigDecimal.valueOf(100)));
-        when(accountsService.getAccount("Id-321")).thenReturn(new Account("Id-321, ", BigDecimal.valueOf(200)));
+        Account accountTo = new Account("Id-123, ", BigDecimal.valueOf(100));
+        Account accountFrom = new Account("Id-123, ", BigDecimal.valueOf(200));
+        accountTo.setVersion(System.currentTimeMillis());
+        accountFrom.setVersion(System.currentTimeMillis());
 
         String errorId = "errorId";
         when(accountsService.getAccount(errorId)).thenThrow(new AccountNotFoundException("Account with id " + errorId + " not found"));
+        when(accountsService.getAccount("Id-123")).thenReturn(accountTo);
+        when(accountsService.getAccount("Id-321")).thenReturn(accountFrom);
     }
 
 
     @Test
     void performTransferFromOneAccountToAnother() throws Exception {
-        var res = mockMvc.perform(post("/v1/accounts/transfer").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\n" +
-                                "    \"accountFromId\": \"Id-123\",\n" +
-                                "    \"accountToId\": \"Id-321\",\n" +
-                                "    \"amount\" : 10\n" +
-                                "}"))
-                .andExpect(request().asyncStarted())
-                .andReturn();
+        mockMvc.perform(post("/v1/accounts/transfer").contentType(MediaType.APPLICATION_JSON)
+                .content("{\n" +
+                        "    \"accountFromId\": \"Id-123\",\n" +
+                        "    \"accountToId\": \"Id-321\",\n" +
+                        "    \"amount\" : 10\n" +
+                        "}")).andExpect(status().isOk());
+    }
 
-        mockMvc.perform(asyncDispatch(res))
-                .andExpect(status().isOk());
+    @Test
+    void shouldNotPerformTransferFromNotExistingAccount() throws Exception {
+        mockMvc.perform(post("/v1/accounts/transfer").contentType(MediaType.APPLICATION_JSON)
+                .content("{\n" +
+                        "    \"accountFromId\": \"errorId\",\n" +
+                        "    \"accountToId\": \"Id-321\",\n" +
+                        "    \"amount\" : 1000\n" +
+                        "}")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldNotPerformTransferToNotExistingAccount() throws Exception {
+        mockMvc.perform(post("/v1/accounts/transfer").contentType(MediaType.APPLICATION_JSON)
+                .content("{\n" +
+                        "    \"accountFromId\": \"Id-123\",\n" +
+                        "    \"accountToId\": \"errorId\",\n" +
+                        "    \"amount\" : 1000\n" +
+                        "}")).andExpect(status().isNotFound());
     }
 
     @Test

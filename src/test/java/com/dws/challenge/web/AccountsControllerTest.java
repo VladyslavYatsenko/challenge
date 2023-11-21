@@ -100,6 +100,6 @@ class AccountsControllerTest {
     this.mockMvc.perform(get("/v1/accounts/" + uniqueAccountId))
       .andExpect(status().isOk())
       .andExpect(
-        content().string("{\"accountId\":\"" + uniqueAccountId + "\",\"balance\":123.45}"));
+        content().string("{\"accountId\":\"" + uniqueAccountId + "\",\"balance\":123.45}" ));
   }
 }
