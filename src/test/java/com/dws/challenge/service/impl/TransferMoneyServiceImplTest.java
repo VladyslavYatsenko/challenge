@@ -33,8 +33,6 @@ class TransferMoneyServiceImplTest {
         //mocking creating of an accounts
         Account accountTo = new Account("Id-123, ", BigDecimal.valueOf(100));
         Account accountFrom = new Account("Id-123, ", BigDecimal.valueOf(200));
-        accountTo.setVersion(System.currentTimeMillis());
-        accountFrom.setVersion(System.currentTimeMillis());
         when(accountsService.getAccount("Id-123")).thenReturn(accountTo);
         when(accountsService.getAccount("Id-321")).thenReturn(accountFrom);
 
@@ -44,8 +42,6 @@ class TransferMoneyServiceImplTest {
     void shouldPerformTransferMoneyFromOneAccountToAnother() {
         Account accountFrom = new Account("Id-123", BigDecimal.valueOf(100));
         Account accountTo = new Account("Id-321", BigDecimal.valueOf(200));
-        accountFrom.setVersion(System.currentTimeMillis());
-        accountTo.setVersion(System.currentTimeMillis());
         BigDecimal amount = BigDecimal.valueOf(50);
 
         assertDoesNotThrow(() -> transferMoneyService.transferMoney(accountFrom.getAccountId(), accountTo.getAccountId(), amount));

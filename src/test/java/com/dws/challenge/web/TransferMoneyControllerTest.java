@@ -43,8 +43,6 @@ class TransferMoneyControllerTest {
         //mocking creating of an accounts
         Account accountTo = new Account("Id-123, ", BigDecimal.valueOf(100));
         Account accountFrom = new Account("Id-123, ", BigDecimal.valueOf(200));
-        accountTo.setVersion(System.currentTimeMillis());
-        accountFrom.setVersion(System.currentTimeMillis());
 
         String errorId = "errorId";
         when(accountsService.getAccount(errorId)).thenThrow(new AccountNotFoundException("Account with id " + errorId + " not found"));

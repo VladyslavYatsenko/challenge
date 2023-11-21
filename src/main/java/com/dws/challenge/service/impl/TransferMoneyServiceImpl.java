@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ConcurrentModificationException;
 
 @Service
 @RequiredArgsConstructor
@@ -26,25 +25,30 @@ public class TransferMoneyServiceImpl implements TransferMoneyService {
         Account accountFrom = accountsService.getAccount(accountFromId);
         Account accountTo = accountsService.getAccount(accountToId);
 
-        // Optimistic locking (checking the version of an account) if version is changed cannot perform transfer
-        if (!accountFrom.getVersion().equals(accountsService.getAccount(accountFromId).getVersion()) ||
-                !accountTo.getVersion().equals(accountsService.getAccount(accountToId).getVersion())) {
-            throw new ConcurrentModificationException("Cannot perform transfer, Optimistic locking failed.");
-        }
+        try {
+            if (accountFrom.getAccountId().compareTo(accountTo.getAccountId()) < 0) {
+                accountFrom.getLock().lock(); // A
+                accountTo.getLock().lock(); // B
+            } else {
+                accountTo.getLock().lock(); // B
+                accountFrom.getLock().lock(); // A to avoid deadlock
+            }
 
-        if (accountFrom.getBalance().compareTo(amount) >= 0) {
-            accountFrom.setVersion(accountFrom.getVersion() + 1);
-            accountFrom.setBalance(accountFrom.getBalance().subtract(amount));
-            accountsService.updateAccount(accountFrom);
-            notificationService.notifyAboutTransfer(accountFrom, "Money transfer was performed to Account: " + accountTo.getAccountId() + ", Amount: " + amount);
+            if (accountFrom.getBalance().compareTo(amount) >= 0) {
+                accountFrom.setBalance(accountFrom.getBalance().subtract(amount));
+                accountsService.updateAccount(accountFrom);
+                notificationService.notifyAboutTransfer(accountFrom, "Money transfer was performed to Account: " + accountTo.getAccountId() + ", Amount: " + amount);
 
-            accountTo.setVersion(accountTo.getVersion() + 1);
-            accountTo.setBalance(accountTo.getBalance().add(amount));
-            accountsService.updateAccount(accountTo);
-            notificationService.notifyAboutTransfer(accountTo, "Money transfer was performed from Account: " + accountFrom.getAccountId() + ", Amount: " + amount);
-        } else {
-            log.error("Cannot perform transfer");
-            throw new TransferMoneyException("Cannot perform transfer, please check your balance");
+                accountTo.setBalance(accountTo.getBalance().add(amount));
+                accountsService.updateAccount(accountTo);
+                notificationService.notifyAboutTransfer(accountTo, "Money transfer was performed from Account: " + accountFrom.getAccountId() + ", Amount: " + amount);
+            } else {
+                log.error("Cannot perform transfer");
+                throw new TransferMoneyException("Cannot perform transfer, please check your balance");
+            }
+        } finally {
+            accountFrom.getLock().unlock();
+            accountTo.getLock().unlock();
         }
     }
 }

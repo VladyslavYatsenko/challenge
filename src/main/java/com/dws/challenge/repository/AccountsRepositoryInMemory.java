@@ -16,7 +16,6 @@ public class AccountsRepositoryInMemory implements AccountsRepository {
     @Override
     public void createAccount(Account account) throws DuplicateAccountIdException {
         Account previousAccount = accounts.putIfAbsent(account.getAccountId(), account);
-        account.setVersion(System.currentTimeMillis());
         if (previousAccount != null) {
             throw new DuplicateAccountIdException(
                     "Account id " + account.getAccountId() + " already exists!");
