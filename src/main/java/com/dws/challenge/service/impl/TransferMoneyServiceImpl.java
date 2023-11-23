@@ -49,11 +49,16 @@ public class TransferMoneyServiceImpl implements TransferMoneyService {
                 throw new TransferMoneyException("Cannot perform transfer, please check your balance");
             }
         } finally {
-            accountTo.getLock().unlock(); // B
-            accountFrom.getLock().unlock(); // A, releasing locks in reverse order to avoid deadlock
-
+            if (accountFrom.getAccountId().compareTo(accountTo.getAccountId()) < 0) {
+                accountTo.getLock().unlock(); // B
+                accountFrom.getLock().unlock(); // A, releasing locks in reverse order to avoid deadlock
+            } else {
+                accountFrom.getLock().unlock(); // A, releasing locks in reverse order to avoid deadlock
+                accountTo.getLock().unlock(); // B
+            }
 
             log.info("Locks are released");
         }
     }
+
 }
