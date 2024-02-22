@@ -19,7 +19,10 @@ up with a negative balance (we do not support overdrafts!)
 Whenever a transfer is made, a notification should be sent to both account holders, with a message
 containing the id of the other account and the amount transferred.
 
-This feature should be implemented in a thread-safe manner
+**Multithreading:**
+This feature should be implemented in a thread-safe manner. Your solution should never deadlock, should
+never result in corrupted account state, and should work efficiently for multiple transfers happening at the
+same time.
 
 ## Functionality:
 - Money transfer between existing accounts (accountFrom,accountTo)
